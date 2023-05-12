@@ -1,34 +1,8 @@
-import React, {useRef} from "react";
+import React, {useRef, useState} from "react";
 import { toggleAddModal, addCharacter, searchCharacter, setFormData } from "../slices/kanaSlice";
 import { useSelector, useDispatch } from 'react-redux'
-import { Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, FormGroup, Label, Input } from 'reactstrap';
+import { Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, FormGroup, Label, Input, FormText } from 'reactstrap';
 import { AiOutlinePlus } from "react-icons/ai";
-import styled from "styled-components";
-
-const modalStyle = {
-    backgroundColor: '#A3B18A',
-    color: '#344E41'
-}
-
-const buttonStyle1 = {
-    backgroundColor: '#588157'
-}
-
-const buttonStyle2 = {
-    backgroundColor: '#DAD7CD'
-}
-
-const inputStyle = {
-    backgroundColor: '#DAD7CD',
-    color: '#344E41'
-}
-
-const fileInputBoxStyle = {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItem: 'center',
-    backgroundColor: '#DAD7CD'
-}
 
 const AddModal = () => {
 
@@ -37,22 +11,27 @@ const AddModal = () => {
     const formData = useSelector(state => state.kana.formData);
     const dispatch = useDispatch()
     const inputRef = useRef(null);
+    const [fileInputError, setFileInputError] = useState(false);
 
     const handleToggle = () => {
         dispatch(toggleAddModal());
+        setFileInputError(false);
     }
 
-    const handleSave = (e) => {
+    const handleSave = async (e) => {
         e.preventDefault();
-        dispatch(addCharacter());
-        dispatch(searchCharacter());
+        if (formData.imageData === '') {
+            setFileInputError(true);
+            return
+        }
+        await dispatch(addCharacter());
+        await dispatch(searchCharacter());
         dispatch(toggleAddModal());
     }
 
     const handleChange = (e) => {
         const {name, value, files } = e.target;
         if (name === 'imageData'){
-            console.log(e.target.files)
             if (files.length > 0) {
                 const file = files[0]
                 const reader = new FileReader()
@@ -61,11 +40,8 @@ const AddModal = () => {
                         [name]: reader.result
                     }))
                 };
-                reader.readAsDataURL(file)                
-            } else {
-                dispatch(setFormData({
-                    [name] : null
-                }))
+                reader.readAsDataURL(file)
+                setFileInputError(false);        
             }
         } else {
             dispatch(setFormData({
@@ -79,13 +55,13 @@ const AddModal = () => {
     }
 
     return (
-        <Modal isOpen={showAddModal} toggle={handleToggle} style={modalStyle}>
-            <ModalHeader toggle={handleToggle}>Add new character</ModalHeader>
+        <Modal isOpen={showAddModal} toggle={handleToggle}>
+            <ModalHeader toggle={handleToggle} className="modalStyle">Add new character</ModalHeader>
             <Form onSubmit={handleSave}>
-                <ModalBody>
+                <ModalBody className="modalStyle" >
                     <FormGroup>
                         <Label htmlFor="kana">
-                            Kana
+                            Kana *
                         </Label>
                         <Input
                             id="kana"
@@ -94,6 +70,7 @@ const AddModal = () => {
                             required
                             onChange={handleChange}
                             value={formData.kana}
+                            style={{backgroundColor: '#DAD7CD', color: '#344E41'}}
                         >
                             {order.map((item, index) => 
                                 <option value={item} key={index}>
@@ -103,7 +80,7 @@ const AddModal = () => {
                     </FormGroup>
                     <FormGroup>
                         <Label htmlFor="kanji">
-                            Chinese Character
+                            Chinese Character *
                         </Label>
                         <Input
                             id="kanji"
@@ -130,7 +107,7 @@ const AddModal = () => {
                     </FormGroup>
                     <FormGroup>
                         <Label htmlFor="imageData">
-                            Image
+                            Image *
                         </Label>
                         <input
                             id="imageData"
@@ -138,24 +115,26 @@ const AddModal = () => {
                             type="file"
                             accept="image/*"
                             onChange={handleChange}
-                            required
                             ref={inputRef}
                             hidden
                         />
-                        <div onClick={handleClick} style={{backgroundColor: 'gray', width: '200px', height: '200px'}}>
+                        <div onClick={handleClick} className='fileInputBoxStyle' style={fileInputError ? {border: 'red 1px solid'} : {}}>
                             {formData.imageData ?
-                                <img src={formData.imageData} style={{width: '100%', height:'100%', objectFit: 'contain'}}/>
+                                <img src={formData.imageData} />
                                 :
                                 <AiOutlinePlus />
                             }
                         </div>
+                        <span style={{color: 'red'}} hidden={!fileInputError}>
+                            Please fill in this field
+                        </span>
                     </FormGroup>                    
                 </ModalBody>
-                <ModalFooter>
-                    <Button style={buttonStyle1} type='submit'>
+                <ModalFooter id="modalStyle" className="d-flex justify-content-center">
+                    <Button type='submit' id="buttonStyle1">
                         Save
                     </Button>
-                    <Button onClick={handleToggle} style={buttonStyle2}>
+                    <Button onClick={handleToggle} id='buttonStyle2'>
                         Discard
                     </Button>
                 </ModalFooter>

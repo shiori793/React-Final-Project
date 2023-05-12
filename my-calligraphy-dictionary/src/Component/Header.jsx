@@ -23,7 +23,10 @@ const addModalButtonStyle = {
     backgroundColor: '#DAD7CD',
     color: '#588157',
     borderRadius: '50%',
-    height: '80%'
+    height: '40px',
+    width: '40px',
+    position: 'absolute',
+    right: '3%',
 }
 
 function Header(args) {
@@ -48,9 +51,12 @@ function Header(args) {
         <div>
             <Navbar className='navbar-expand-md px-3' style={{backgroundColor: '#3A5A40'}}>
                 <NavbarToggler onClick={toggle} />
+                <Button style={addModalButtonStyle} className='d-flex justify-content-align align-items-center justify-self-end' onClick={handleClick}>
+                    <AiOutlinePlus />
+                </Button>
                 <Collapse isOpen={isOpen} navbar>
                     <Nav className="me-auto" navbar>
-                        <NavItem className='m-2'>
+                        <NavItem className='m-2 me-5'>
                             <Input
                                 type='text'
                                 name='masterpiece'
@@ -60,7 +66,7 @@ function Header(args) {
                                 style={inputStyle}
                             />
                         </NavItem>
-                        <NavItem className='m-2'>
+                        <NavItem className='m-2 me-5'>
                             <Input
                                 type='text'
                                 name='kanji'
@@ -70,7 +76,7 @@ function Header(args) {
                                 style={inputStyle}
                             />
                         </NavItem>
-                        <NavItem className='m-2'>
+                        <NavItem className='m-2 me-5'>
                             <Input
                                 type='text'
                                 name='kana'
@@ -82,9 +88,6 @@ function Header(args) {
                         </NavItem>
                     </Nav>
                 </Collapse>
-                <Button style={addModalButtonStyle} className='d-flex justify-content-align align-items-center' onClick={handleClick}>
-                    <AiOutlinePlus />
-                </Button>
             </Navbar>
         </div>
     );

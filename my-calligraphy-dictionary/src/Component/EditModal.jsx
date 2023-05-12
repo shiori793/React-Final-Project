@@ -1,49 +1,36 @@
-import React from "react";
+import React, {useRef} from "react";
 import { updateCharacter, deleteCharacter, toggleEditModal, searchCharacter, setFormData } from "../slices/kanaSlice";
 import { useSelector, useDispatch } from 'react-redux'
 import { Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, FormGroup, Label, Input } from 'reactstrap';
-
-const modalStyle = {
-    backgroundColor: '#A3B18A',
-    color: '#344E41'
-}
-
-const buttonStyle1 = {
-
-}
-
-const buttonStyle2 = {
-
-}
+import { AiOutlinePlus } from "react-icons/ai";
 
 const EditModal = () => {
 
     const showEditModal = useSelector(state => state.kana.showEditModal);
-    const editData = useSelector(state => state.kana.editData);
     const formData = useSelector(state => state.kana.formData);
-    const dispatch = useDispatch()
+    const dispatch = useDispatch();
+    const inputRef = useRef(null);
 
     const handleToggle = () => {
         dispatch(toggleEditModal());
     }
 
-    const handleUpdate = (e) => {
+    const handleUpdate = async (e) => {
         e.preventDefault();
-        dispatch(updateCharacter())
-        dispatch(searchCharacter());
+        await dispatch(updateCharacter())
+        await dispatch(searchCharacter());
         dispatch(toggleEditModal());
     }
 
-    const handleDelete = () => {
-        dispatch(deleteCharacter());
-        dispatch(searchCharacter());
+    const handleDelete = async () => {
+        await dispatch(deleteCharacter());
+        await dispatch(searchCharacter());
         dispatch(toggleEditModal());
     }
 
     const handleChange = (e) => {
         const {name, value, files } = e.target;
         if (name === 'imageData'){
-            console.log(e.target.files)
             if (files.length > 0) {
                 const file = files[0]
                 const reader = new FileReader()
@@ -53,10 +40,6 @@ const EditModal = () => {
                     }))
                 };
                 reader.readAsDataURL(file)                
-            } else {
-                dispatch(setFormData({
-                    [name] : null
-                }))
             }
         } else {
             dispatch(setFormData({
@@ -65,11 +48,15 @@ const EditModal = () => {
         }
     }
 
+    const handleClick = () => {
+        inputRef.current.click();
+    }
+
     return (
-        <Modal isOpen={showEditModal} toggle={handleToggle} style={modalStyle}>
-            <ModalHeader toggle={handleToggle}>Edit character</ModalHeader>
+        <Modal isOpen={showEditModal} toggle={handleToggle}>
+            <ModalHeader toggle={handleToggle} className="modalStyle">Edit character</ModalHeader>
             <Form onSubmit={handleUpdate}>
-                <ModalBody>
+                <ModalBody className="modalStyle">
                     <FormGroup>
                         <Label htmlFor="kana">
                             Kana
@@ -113,22 +100,31 @@ const EditModal = () => {
                     </FormGroup>
                     <FormGroup>
                         <Label htmlFor="imageData">
-                            Image
+                            Image *
                         </Label>
-                        <Input
+                        <input
                             id="imageData"
                             name="imageData"
                             type="file"
                             accept="image/*"
                             onChange={handleChange}
+                            ref={inputRef}
+                            hidden
                         />
+                        <div onClick={handleClick} className='fileInputBoxStyle'>
+                            {formData.imageData ?
+                                <img src={formData.imageData} />
+                                :
+                                <AiOutlinePlus />
+                            }
+                        </div>
                     </FormGroup>                    
                 </ModalBody>
-                <ModalFooter>
-                    <Button style={buttonStyle1} type='submit'>
+                <ModalFooter id="modalStyle" className="d-flex justify-content-center">
+                    <Button id="buttonStyle1" type='submit'>
                         Save
                     </Button>
-                    <Button onClick={handleDelete} style={buttonStyle2}>
+                    <Button onClick={handleDelete} id='buttonStyle2'>
                         Delete
                     </Button>
                 </ModalFooter>

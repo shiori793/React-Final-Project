@@ -83,11 +83,16 @@ export const kanaSlice = createSlice({
                             .filter(
                                 data => data.masterpiece === state.searchText.masterpiece
                             )
-                        state.searchList[kana][kanji].length === 0 && delete state.searchList[kana][kanji]
                     })
-                    Object.values(state.searchList[kana]).length === 0 && delete state.searchList[kana]
                 })
             }
+
+            Object.keys(state.searchList).forEach(kana => {
+                Object.keys(state.searchList[kana]).forEach(kanji => {
+                    state.searchList[kana][kanji].length === 0 && delete state.searchList[kana][kanji]
+                })
+                Object.values(state.searchList[kana]).length === 0 && delete state.searchList[kana]
+            })
         },
         updateSearchText: (state, action) => {
             state.searchText = {
@@ -102,7 +107,7 @@ export const kanaSlice = createSlice({
                 kana: 'あ',
                 kanji: '',
                 masterpiece: '',
-                imageData: null
+                imageData: ''
             }
         },
         toggleEditModal: (state) => {
