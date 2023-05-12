@@ -4,7 +4,12 @@ import Character from "./Character";
 const Kanji = ({kanji}) => {
     return (
         <div>
-            <Character character={}/>
+            {
+                kanji.map(
+                    character => 
+                        <Character key={character.id} character={character}/>
+                )
+            }
         </div>
     )
 }

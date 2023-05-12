@@ -2,8 +2,9 @@ import { createSlice } from '@reduxjs/toolkit'
 import { v4 as uuidv4} from 'uuid';
 
 const initialState = {
-    kanaList: [],
-    searchList: [],
+    kanaList: {},
+    searchList: {},
+    masterpieceList: [],
     searchText: {
         masterpiece: '',
         kanji: '',
@@ -11,61 +12,82 @@ const initialState = {
     },
     showAddModal: false,
     showEditModal: false,
-    editId: '',
+    editData: {},
+    formData: {},
     order: ['あ','い','う','え','お','か','き','く','け','こ','さ','し','す','せ','そ','た','ち','つ','て','と','な','に','ぬ','ね','の','は','ひ','ふ','へ','ほ','ま','み','む','め','も','や','ゆ','よ','ら','り','る','れ','ろ','わ','ゐ','ゑ','を','ん']
-}
-
-const sortList = (array) => {
-    const kana_order = ['あ','い','う','え','お','か','き','く','け','こ','さ','し','す','せ','そ','た','ち','つ','て','と','な','に','ぬ','ね','の','は','ひ','ふ','へ','ほ','ま','み','む','め','も','や','ゆ','よ','ら','り','る','れ','ろ','わ','ゐ','ゑ','を','ん']
-    array.sort((a, b) => {
-        const a_index = kana_order.indexOf(a.kana);
-        const b_index = kana_order.indexOf(b.kana);
-        return a_index - b_index;
-    });
-
-    const kanji_array = [];
-    array.forEach(obj => kanji_array.push(obj.kanji));
-    const kanji_order = Array.from(new Set(kanji_order));
-    array.sort((a, b) => {
-        const a_index = kanji_order.indexOf(a.kanji);
-        const b_index = kanji_order.indexOf(b.kanji);
-        return a_index - b_index;
-    })
-    return array;
 }
 
 export const kanaSlice = createSlice({
     name: 'kana',
     initialState,
     reducers: {
-        addCharacter: (state, action) => {
+        addCharacter: (state) => {
             const v4Id = uuidv4();
-            state.kanaList.push({
+            const newData = {
+                ...state.formData,
                 id: v4Id,
-                ...action.payload
-            })
-            state.kanaList = sortList(state.kanaList);
+                masterpiece: state.formData.masterpiece === '' ? 'Other' : state.formData.masterpiece
+            }
+            if (state.kanaList.hasOwnProperty(newData.kana)){
+                if (state.kanaList[newData.kana].hasOwnProperty(newData.kanji)){
+                    state.kanaList[newData.kana][newData.kanji].push(newData)
+                } else {
+                    state.kanaList[newData.kana][newData.kanji] = [newData]
+                }
+            } else {
+                state.kanaList[newData.kana] = {};
+                state.kanaList[newData.kana][newData.kanji] = [newData];
+            }
+            !state.masterpieceList.includes(newData.masterpiece) && state.masterpieceList.push(newData.masterpiece);
+            state.formData = {};
         },
-        updateCharacter: (state, action) => {
-            state.kanaList = state.kanaList.map(
-                kana => 
-                kana.id === action.payload.id ?
-                    action.payload : kana
-            )
-            state.kanaList = sortList(state.kanaList);
+        updateCharacter: (state) => {
+            const updateData = state.formData;
+            state.kanaList[updateData.kana][updateData.kanji] = state.kanaList[updateData.kana][updateData.kanji].map(
+                kana => kana.id === updateData.id ? updateData : kana
+            );
+            state.formData = {};
+            state.editData = {};
+
         },
-        deleteCharacter: (state, action) => {
-            state.kanaList = state.kanaList.filter(kana => kana.id !== action.payload);
+        deleteCharacter: (state) => {
+            const deleteData = state.editData;
+            state.kanaList[deleteData.kana][deleteData.kanji] = 
+                state.kanaList[deleteData.kana][deleteData.kanji].filter(kana => kana.id !== deleteData.id);
+            state.formData = {};
+            state.editData = {};
         },
         searchCharacter: (state) => {
-            state.searchList = state.kanaList.filter(
-                kana => 
-                    state.searchText.masterpiece === '' ? true : kana.masterpiece === state.searchText.masterpiece
-                    &&
-                    state.searchText.kanji === '' ? true : kana.kanji === state.searchText.kanji
-                    &&
-                    state.searchText.kana === '' ? true : kana.kana === state.searchText.kana
-            )
+            state.searchList = Object.assign({}, JSON.parse(JSON.stringify(state.kanaList)));
+            if (state.searchText.kana !== '') {
+                state.searchList = Object.fromEntries(Object.entries(state.searchList)
+                    .filter(([key, value]) => key.includes(state.searchText.kana)))
+            }
+
+            if (state.searchText.kanji !== '') {
+                Object.keys(state.searchList).forEach(kana => {
+                    if (Object.keys(state.searchList[kana]).includes(state.searchText.kanji)){
+                        state.searchList[kana] = Object.fromEntries(Object.entries(state.searchList[kana])
+                            .filter(([key, value]) => key === state.searchText.kanji)
+                        )
+                    } else {
+                        delete state.searchList[kana]
+                    }
+                })
+            }
+
+            if(state.searchText.masterpiece !== '') {
+                Object.keys(state.searchList).forEach(kana => {
+                    Object.keys(state.searchList[kana]).forEach(kanji => {
+                        state.searchList[kana][kanji] = state.searchList[kana][kanji]
+                            .filter(
+                                data => data.masterpiece === state.searchText.masterpiece
+                            )
+                        state.searchList[kana][kanji].length === 0 && delete state.searchList[kana][kanji]
+                    })
+                    Object.values(state.searchList[kana]).length === 0 && delete state.searchList[kana]
+                })
+            }
         },
         updateSearchText: (state, action) => {
             state.searchText = {
@@ -76,11 +98,25 @@ export const kanaSlice = createSlice({
         },
         toggleAddModal: (state) => {
             state.showAddModal = !state.showAddModal;
+            state.formData = {
+                kana: 'あ',
+                kanji: '',
+                masterpiece: '',
+                imageData: null
+            }
         },
-        toggleEditModal: (state, action) => {
+        toggleEditModal: (state) => {
             state.showEditModal = !state.showEditModal;
-            state.showEditModal ? state.editId = action.payload : state.editId = ''
         },
+        setEditData: (state, action) => {
+            state.editData = action.payload;
+        },
+        setFormData: (state, action) => {
+            state.formData = {
+                ...state.formData,
+                ...action.payload
+            };
+        }
     },
 })
 
@@ -91,7 +127,9 @@ export const {
     searchCharacter, 
     updateSearchText, 
     toggleAddModal, 
-    toggleEditModal 
+    toggleEditModal,
+    setEditData,
+    setFormData
 } = kanaSlice.actions
 
 export default kanaSlice.reducer

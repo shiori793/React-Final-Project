@@ -1,5 +1,5 @@
 import React from "react";
-import { toggleEditModal } from "../slices/kanaSlice";
+import { toggleEditModal, setEditData, setFormData } from "../slices/kanaSlice";
 import { useSelector, useDispatch } from 'react-redux'
 import styled from "styled-components";
 
@@ -13,12 +13,17 @@ const CustomCard = styled.div`
 
 const Character = ({character}) => {
 
-    const showEditModal = useSelector(state => state.kana.showEditModal)
     const dispatch = useDispatch()
 
+    const handleClick = () => {
+        dispatch(setEditData(character));
+        dispatch(setFormData(character));
+        dispatch(toggleEditModal());
+    }
+
     return (
-        <CustomCard>
-            
+        <CustomCard onClick={handleClick}>
+            <img src={character.imageData} alt="Cannot open image file"/>
         </CustomCard>
     )
 }

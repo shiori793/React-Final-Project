@@ -65,7 +65,7 @@ function Header(args) {
                                 type='text'
                                 name='kanji'
                                 value={searchText.kanji}
-                                placeholder='Kanji'
+                                placeholder='Chinese character'
                                 onChange={handleChange}
                                 style={inputStyle}
                             />
