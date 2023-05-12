@@ -2,8 +2,9 @@ import './App.css'
 import Header from './Component/Header';
 import Kana from './Component/Kana';
 import { useSelector } from 'react-redux'
-import AddModal from './Component/AddModal';
-import EditModal from './Component/EditModal';
+// import AddModal from './Component/AddModal';
+// import EditModal from './Component/EditModal';
+import UpdateModal from './Component/UpdateModal';
 import { Container } from 'reactstrap';
 
 const containerStyle = {
@@ -34,8 +35,9 @@ function App() {
             </Container>
         }
       </div>
-      <AddModal />
-      <EditModal />
+      {/* <AddModal />
+      <EditModal /> */}
+      <UpdateModal />
     </div>
   )
 }

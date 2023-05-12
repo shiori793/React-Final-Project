@@ -1,18 +1,34 @@
-import React, {useRef} from "react";
-import { updateCharacter, deleteCharacter, toggleEditModal, searchCharacter, setFormData } from "../slices/kanaSlice";
+import React, {useRef, useState} from "react";
+import { updateCharacter, deleteCharacter, toggleEditModal,toggleAddModal, addCharacter, searchCharacter, setFormData } from "../slices/kanaSlice";
 import { useSelector, useDispatch } from 'react-redux'
-import { Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, FormGroup, Label, Input } from 'reactstrap';
+import { Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, FormGroup, Label, Input, FormText } from 'reactstrap';
 import { AiOutlinePlus } from "react-icons/ai";
 
-const EditModal = () => {
+const UpdateModal = () => {
 
+    const showAddModal = useSelector(state => state.kana.showAddModal);
     const showEditModal = useSelector(state => state.kana.showEditModal);
+    const order = useSelector(state => state.kana.order);
     const formData = useSelector(state => state.kana.formData);
-    const dispatch = useDispatch();
+    const dispatch = useDispatch()
     const inputRef = useRef(null);
+    const [fileInputError, setFileInputError] = useState(false);
 
     const handleToggle = () => {
-        dispatch(toggleEditModal());
+        showAddModal && dispatch(toggleAddModal());
+        showEditModal && dispatch(toggleEditModal());
+        setFileInputError(false);
+    }
+
+    const handleSave = async (e) => {
+        e.preventDefault();
+        if (formData.imageData === '') {
+            setFileInputError(true);
+            return
+        }
+        await dispatch(addCharacter());
+        await dispatch(searchCharacter());
+        dispatch(toggleAddModal());
     }
 
     const handleUpdate = async (e) => {
@@ -39,7 +55,8 @@ const EditModal = () => {
                         [name]: reader.result
                     }))
                 };
-                reader.readAsDataURL(file)                
+                reader.readAsDataURL(file)
+                setFileInputError(false);        
             }
         } else {
             dispatch(setFormData({
@@ -53,35 +70,59 @@ const EditModal = () => {
     }
 
     return (
-        <Modal isOpen={showEditModal} toggle={handleToggle}>
-            <ModalHeader toggle={handleToggle} className="modalStyle">Edit character</ModalHeader>
-            <Form onSubmit={handleUpdate}>
-                <ModalBody className="modalStyle">
+        <Modal isOpen={showAddModal || showEditModal} toggle={handleToggle}>
+            <ModalHeader toggle={handleToggle} className="modalStyle">
+                {showAddModal && 'Add new character'}
+                {showEditModal && 'Edit character'}
+            </ModalHeader>
+            <Form onSubmit={showAddModal ? handleSave : handleUpdate}>
+                <ModalBody className="modalStyle" >
                     <FormGroup>
                         <Label htmlFor="kana">
-                            Kana
+                            Kana *
                         </Label>
-                            <Input
-                                id="kana"
-                                name="kana"
-                                type="text"
-                                readOnly
-                                onChange={handleChange}
-                                value={formData.kana}
-                            />
+                        {
+                            showAddModal && 
+                                <Input
+                                    id="kana"
+                                    name="kana"
+                                    type="select"
+                                    required
+                                    onChange={handleChange}
+                                    value={formData.kana}
+                                    style={{backgroundColor: '#DAD7CD', color: '#344E41'}}
+                                >
+                                    {order.map((item, index) => 
+                                        <option value={item} key={index}>
+                                            {item}
+                                        </option>)}
+                                </Input>
+                        }
+                        {
+                            showEditModal &&
+                                <Input
+                                    id="kana"
+                                    name="kana"
+                                    type="text"
+                                    readOnly
+                                    onChange={handleChange}
+                                    value={formData.kana}
+                                />
+                        }
                     </FormGroup>
                     <FormGroup>
                         <Label htmlFor="kanji">
-                            Chinese Character
+                            Chinese Character *
                         </Label>
                         <Input
                             id="kanji"
                             name="kanji"
                             placeholder="安"
                             type="text"
-                            readOnly
+                            required
                             onChange={handleChange}
                             value={formData.kanji}
+                            readOnly={showEditModal}
                         />
                     </FormGroup>
                     <FormGroup>
@@ -110,21 +151,24 @@ const EditModal = () => {
                             ref={inputRef}
                             hidden
                         />
-                        <div onClick={handleClick} className='fileInputBoxStyle'>
+                        <div onClick={handleClick} className='fileInputBoxStyle' style={fileInputError ? {border: 'red 1px solid'} : {}}>
                             {formData.imageData ?
                                 <img src={formData.imageData} />
                                 :
                                 <AiOutlinePlus />
                             }
                         </div>
+                        <span style={{color: 'red'}} hidden={!fileInputError}>
+                            Please fill in this field
+                        </span>
                     </FormGroup>                    
                 </ModalBody>
                 <ModalFooter id="modalStyle" className="d-flex justify-content-center">
-                    <Button id="buttonStyle1" type='submit'>
+                    <Button type='submit' id="buttonStyle1">
                         Save
                     </Button>
-                    <Button onClick={handleDelete} id='buttonStyle2'>
-                        Delete
+                    <Button onClick={showAddModal ? handleToggle : handleDelete} id='buttonStyle2'>
+                        {showAddModal ? 'Discard' : 'Delete'}
                     </Button>
                 </ModalFooter>
             </Form>
@@ -132,4 +176,4 @@ const EditModal = () => {
     )
 }
 
-export default EditModal;
+export default UpdateModal;
